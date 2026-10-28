@@ -113,7 +113,7 @@ fun TelaResumo(
 fun ItemMovimentacao(movimentacao: Movimentacao) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary)
     ) {
         Row(
             modifier = Modifier
