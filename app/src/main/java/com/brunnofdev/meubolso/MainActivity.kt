@@ -3,6 +3,7 @@ package com.brunnofdev.meubolso
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -19,13 +20,19 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.brunnofdev.meubolso.ui.screens.*
 import com.brunnofdev.meubolso.viewmodel.MeuBolsoViewModel
+import com.brunnofdev.meubolso.ui.theme.BackgroundBlue
+import com.brunnofdev.meubolso.ui.theme.PrimaryBlue
+import com.brunnofdev.meubolso.ui.theme.IncomeGreen
+import com.brunnofdev.meubolso.ui.theme.ExpenseRed
+import java.nio.file.WatchEvent
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            com.brunnofdev.meubolso.ui.theme.MeuBolsoTheme{
             MeuBolsoApp()
-        }
+        }}
     }
 }
 
@@ -39,7 +46,7 @@ fun MeuBolsoApp(viewModel: MeuBolsoViewModel = viewModel()) {
         bottomBar = {
 
                 if (currentRoute != "cadastro") {
-                NavigationBar {
+                NavigationBar (containerColor = MaterialTheme.colorScheme.primaryContainer) {
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.Home, contentDescription = "Resumo") },
                         label = { Text("Resumo") },
@@ -64,7 +71,7 @@ fun MeuBolsoApp(viewModel: MeuBolsoViewModel = viewModel()) {
 
         floatingActionButton = {
             if (currentRoute == "resumo" || currentRoute == "historico") {
-                FloatingActionButton(onClick = { navController.navigate("cadastro") }) {
+                FloatingActionButton( { navController.navigate("cadastro") }) {
                     Icon(Icons.Default.Add, contentDescription = "Nova Movimentação")
                 }
             }

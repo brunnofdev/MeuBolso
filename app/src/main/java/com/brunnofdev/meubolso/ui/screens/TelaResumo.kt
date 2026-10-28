@@ -1,5 +1,6 @@
 package com.brunnofdev.meubolso.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,6 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.brunnofdev.meubolso.model.Movimentacao
 import com.brunnofdev.meubolso.model.TipoMovimentacao
+import com.brunnofdev.meubolso.ui.theme.BackgroundBlue
 
 @Composable
 fun TelaResumo(
@@ -25,6 +27,7 @@ fun TelaResumo(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
+            .background(BackgroundBlue)
     ) {
         Text(
             text = "Resumo Financeiro",
@@ -129,7 +132,7 @@ fun ItemMovimentacao(movimentacao: Movimentacao) {
             }
             Text(
                 text = "R$ ${"%.2f".format(movimentacao.valor)}",
-                color = if (movimentacao.tipo == TipoMovimentacao.RECEITA) Color(0xFF155724) else Color(0xFF721C24),
+                color = if (movimentacao.tipo == TipoMovimentacao.RECEITA) Color(0xFF2E7D32) else Color(0xFFD32F2F),
                 fontWeight = FontWeight.Bold
             )
         }
