@@ -5,10 +5,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.List
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -17,7 +17,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.brunnofdev.meubolso.model.Movimentacao
 import com.brunnofdev.meubolso.ui.screens.*
 import com.brunnofdev.meubolso.viewmodel.MeuBolsoViewModel
 
@@ -48,10 +47,16 @@ fun MeuBolsoApp(viewModel: MeuBolsoViewModel = viewModel()) {
                         onClick = { navController.navigate("resumo") }
                     )
                     NavigationBarItem(
-                        icon = { Icon(Icons.Default.List, contentDescription = "Histórico") },
+                        icon = { Icon(Icons.AutoMirrored.Filled.List, contentDescription = "Histórico") },
                         label = { Text("Histórico") },
                         selected = currentRoute == "historico",
                         onClick = { navController.navigate("historico") }
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.DateRange, contentDescription = "Relatório") },
+                        label = { Text("Relatório") },
+                        selected = currentRoute == "relatorio",
+                        onClick = { navController.navigate("relatorio") }
                     )
                 }
                 }
@@ -76,6 +81,13 @@ fun MeuBolsoApp(viewModel: MeuBolsoViewModel = viewModel()) {
                     receitas = viewModel.calcularReceitas(),
                     ultimasMovimentacoes = viewModel.movimentacoes)
             }
+
+            composable("relatorio") {
+                TelaRelatorio(
+                    movimentacoes = viewModel.movimentacoes
+                )
+            }
+
             composable("historico") {
                 TelaHistorico(movimentacoes = viewModel.movimentacoes, navController = navController)
 
@@ -84,7 +96,7 @@ fun MeuBolsoApp(viewModel: MeuBolsoViewModel = viewModel()) {
                 TelaCadastro(
                     onSalvar = { novaMovimentacao ->
                         viewModel.adicionarMovimentacao(novaMovimentacao)
-                        navController.popBackStack() // Volta para a tela anterior
+                        navController.popBackStack()
                     }
                 )
             }

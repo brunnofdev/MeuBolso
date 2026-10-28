@@ -112,7 +112,7 @@ fun TelaEdicao(movimentacaoAtual : Movimentacao,
                 if (descricaoValida && valorValido && valorTratado != null) {
                     onSalvar(
                         Movimentacao(
-                            id = movimentacaoAtual.id, // <-- MUITO IMPORTANTE: Preserva o ID original
+                            id = movimentacaoAtual.id,
                             descricao = descricao.trim(),
                             valor = valorTratado,
                             categoria = categoria.ifBlank { "Geral" },
