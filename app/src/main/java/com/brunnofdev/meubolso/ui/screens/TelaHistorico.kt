@@ -25,14 +25,14 @@ fun TelaHistorico(
     navController: NavController
 )  {
 
-        var filtroSelecionado by remember {
-            mutableStateOf<TipoMovimentacao?>(null)
-        }
+    var filtroSelecionado by remember {
+        mutableStateOf<TipoMovimentacao?>(null)
+    }
 
-        val movimentacoesFiltradas = movimentacoes.filter { movimentacao ->
-            filtroSelecionado == null ||
-                    movimentacao.tipo == filtroSelecionado
-        }
+    val movimentacoesFiltradas = movimentacoes.filter { movimentacao ->
+        filtroSelecionado == null ||
+                movimentacao.tipo == filtroSelecionado
+    }
 
     Column(
         modifier = Modifier
@@ -92,10 +92,8 @@ fun TelaHistorico(
                 text = when (filtroSelecionado) {
                     TipoMovimentacao.RECEITA ->
                         "Nenhuma receita cadastrada."
-
                     TipoMovimentacao.DESPESA ->
                         "Nenhuma despesa cadastrada."
-
                     null ->
                         "Seu histórico está vazio."
                 },
@@ -108,12 +106,21 @@ fun TelaHistorico(
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(movimentacoesFiltradas) { item ->
+
+                    val isReceita = item.tipo == TipoMovimentacao.RECEITA
+
+                    val corTextoValor = if (isReceita) Color(0xFF155724) else Color(0xFF721C24)
+
+                    val corFundoCard = if (isReceita) Color(0xFFD4EDDA) else Color(0xFFF8D7DA)
+
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
                                 navController.navigate("edicao/${item.id}")
-                            }
+                            },
+
+                        colors = CardDefaults.cardColors(containerColor = corFundoCard)
                     ) {
                         Row(
                             modifier = Modifier
@@ -126,13 +133,14 @@ fun TelaHistorico(
                             ) {
                                 Text(
                                     text = item.descricao,
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.Black
                                 )
 
                                 Text(
-                                    text = "${item.categoria} • ${item.data}",
+                                    text = "${item.categoria} \n${item.data}",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    color = Color.DarkGray
                                 )
                             }
 
@@ -140,13 +148,7 @@ fun TelaHistorico(
                                 text = "R$ ${"%.2f".format(item.valor)}",
                                 style = MaterialTheme.typography.bodyLarge,
                                 fontWeight = FontWeight.Bold,
-                                color = when (item.tipo) {
-                                    TipoMovimentacao.RECEITA ->
-                                        Color(0xFF2E7D32)
-
-                                    TipoMovimentacao.DESPESA ->
-                                        Color(0xFFD32F2F)
-                                }
+                                color = corTextoValor
                             )
                         }
                     }
