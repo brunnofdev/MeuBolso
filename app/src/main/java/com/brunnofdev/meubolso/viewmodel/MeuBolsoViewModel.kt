@@ -32,7 +32,7 @@ class MeuBolsoViewModel : ViewModel() {
     fun editarMovimentacao(id: String, novaMovimentacao: Movimentacao) {
         val index = movimentacoes.indexOfFirst { it.id == id }
         if (index != -1) {
-            _movimentacoes[index] = novaMovimentacao // A substituição atualiza a UI automaticamente
+            _movimentacoes[index] = novaMovimentacao
         }
     }
 

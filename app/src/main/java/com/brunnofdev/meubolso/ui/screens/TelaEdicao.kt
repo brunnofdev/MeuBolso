@@ -1,3 +1,4 @@
+
 package com.brunnofdev.meubolso.ui.screens
 
 import androidx.compose.foundation.layout.*
@@ -10,37 +11,56 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.brunnofdev.meubolso.model.Movimentacao
 import com.brunnofdev.meubolso.model.TipoMovimentacao
+import com.brunnofdev.meubolso.ui.components.CampoData
 
 @Composable
-fun TelaEdicao(movimentacaoAtual : Movimentacao,
-    onSalvar: (Movimentacao) -> Unit, onExcluir: () -> Unit) {
-
-    var descricao by remember { mutableStateOf(movimentacaoAtual.descricao) }
-    var valorText by remember { mutableStateOf(movimentacaoAtual.valor.toString().replace(".", ",")) }
-    var categoria by remember { mutableStateOf(movimentacaoAtual.categoria) }
-    var data by remember { mutableStateOf(movimentacaoAtual.data) }
-    var tipo by remember { mutableStateOf(
-        if(movimentacaoAtual.tipo == TipoMovimentacao.RECEITA) true else false ) }
+fun TelaEdicao(
+    movimentacaoAtual: Movimentacao,
+    onSalvar: (Movimentacao) -> Unit,
+    onExcluir: () -> Unit
+) {
+    var descricao by remember {
+        mutableStateOf(movimentacaoAtual.descricao)
+    }
+    var valorText by remember {
+        mutableStateOf(movimentacaoAtual.valor.toString().replace(".", ","))
+    }
+    var categoria by remember {
+        mutableStateOf(movimentacaoAtual.categoria)
+    }
+    var data by remember {
+        mutableStateOf(movimentacaoAtual.data.trim())
+    }
+    var tipo by remember {
+        mutableStateOf(movimentacaoAtual.tipo == TipoMovimentacao.RECEITA)
+    }
 
     var erroDescricao by remember { mutableStateOf(false) }
     var erroValor by remember { mutableStateOf(false) }
+    var erroData by remember { mutableStateOf(false) }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-        Text("Cadastrar nova Movimentação", style = MaterialTheme.typography.headlineSmall)
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp)
+    ) {
+        Text(
+            "Editar movimentação",
+            style = MaterialTheme.typography.headlineSmall
+        )
+
         Spacer(modifier = Modifier.height(16.dp))
 
         OutlinedTextField(
             value = descricao,
             onValueChange = {
                 descricao = it
-                if (it.isNotEmpty()) erroDescricao = false
+                erroDescricao = false
             },
             label = { Text("Descrição *") },
             isError = erroDescricao,
             supportingText = {
-                if (erroDescricao) {
-                    Text("Informe a descrição", color = MaterialTheme.colorScheme.error)
-                }
+                if (erroDescricao) Text("Informe a descrição")
             },
             modifier = Modifier.fillMaxWidth()
         )
@@ -49,15 +69,15 @@ fun TelaEdicao(movimentacaoAtual : Movimentacao,
             value = valorText,
             onValueChange = {
                 valorText = it
-                if (it.isNotEmpty()) erroValor = false
+                erroValor = false
             },
-            label = { Text("Valor (Ex: 50.00) *") },
-            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+            label = { Text("Valor *") },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Decimal
+            ),
             isError = erroValor,
             supportingText = {
-                if (erroValor) {
-                    Text("Digite um valor numérico válido", color = MaterialTheme.colorScheme.error)
-                }
+                if (erroValor) Text("Digite um valor maior que zero")
             },
             modifier = Modifier.fillMaxWidth()
         )
@@ -69,16 +89,24 @@ fun TelaEdicao(movimentacaoAtual : Movimentacao,
             modifier = Modifier.fillMaxWidth()
         )
 
-        OutlinedTextField(
-            value = data,
-            onValueChange = { data = it },
-            label = { Text("Data (DD/MM/AAAA)") },
-            modifier = Modifier.fillMaxWidth()
+        CampoData(
+            data = data,
+            onDataSelecionada = {
+                data = it
+                erroData = false
+            }
         )
 
+        if (erroData) {
+            Text(
+                text = "Selecione uma data.",
+                color = MaterialTheme.colorScheme.error,
+                style = MaterialTheme.typography.bodySmall
+            )
+        }
+
         Text(
-            text = "Tipo de Movimentação *",
-            style = MaterialTheme.typography.bodyMedium,
+            "Tipo de movimentação *",
             modifier = Modifier.padding(top = 8.dp)
         )
 
@@ -87,7 +115,10 @@ fun TelaEdicao(movimentacaoAtual : Movimentacao,
                 selected = !tipo,
                 onClick = { tipo = false }
             )
-            Text("Despesa", modifier = Modifier.padding(end = 16.dp))
+            Text(
+                "Despesa",
+                modifier = Modifier.padding(end = 16.dp)
+            )
 
             RadioButton(
                 selected = tipo,
@@ -100,24 +131,36 @@ fun TelaEdicao(movimentacaoAtual : Movimentacao,
 
         Button(
             onClick = {
-                val valorTratado = valorText.replace(",", ".").toDoubleOrNull()
-                val descricaoValida = descricao.isNotBlank()
-                val valorValido = valorTratado != null && valorTratado > 0.0
+                val valor = valorText
+                    .replace(",", ".")
+                    .toDoubleOrNull()
 
-                val tipoCadastro = if(tipo) TipoMovimentacao.RECEITA else TipoMovimentacao.DESPESA
+                val descricaoValida = descricao.isNotBlank()
+                val valorValido = valor != null && valor > 0.0
+                val dataValida = data.isNotBlank()
 
                 erroDescricao = !descricaoValida
                 erroValor = !valorValido
+                erroData = !dataValida
 
-                if (descricaoValida && valorValido && valorTratado != null) {
+                if (
+                    descricaoValida &&
+                    valorValido &&
+                    valor != null &&
+                    dataValida
+                ) {
                     onSalvar(
                         Movimentacao(
                             id = movimentacaoAtual.id,
                             descricao = descricao.trim(),
-                            valor = valorTratado,
+                            valor = valor,
                             categoria = categoria.ifBlank { "Geral" },
-                            data = data.ifBlank { "Hoje" },
-                            tipo = tipoCadastro
+                            data = data,
+                            tipo = if (tipo) {
+                                TipoMovimentacao.RECEITA
+                            } else {
+                                TipoMovimentacao.DESPESA
+                            }
                         )
                     )
                 }
@@ -130,11 +173,13 @@ fun TelaEdicao(movimentacaoAtual : Movimentacao,
         Spacer(modifier = Modifier.height(8.dp))
 
         OutlinedButton(
-            onClick = { onExcluir() },
+            onClick = onExcluir,
             modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
+            colors = ButtonDefaults.outlinedButtonColors(
+                contentColor = MaterialTheme.colorScheme.error
+            )
         ) {
-            Text("Excluir Movimentação")
+            Text("Excluir movimentação")
         }
     }
 }
