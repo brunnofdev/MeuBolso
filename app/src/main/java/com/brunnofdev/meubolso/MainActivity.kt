@@ -77,7 +77,7 @@ fun MeuBolsoApp(viewModel: MeuBolsoViewModel = viewModel()) {
                     ultimasMovimentacoes = viewModel.movimentacoes)
             }
             composable("historico") {
-                TelaHistorico(movimentacoes = viewModel.movimentacoes)
+                TelaHistorico(movimentacoes = viewModel.movimentacoes, navController = navController)
 
         }
             composable("cadastro") {
@@ -87,6 +87,24 @@ fun MeuBolsoApp(viewModel: MeuBolsoViewModel = viewModel()) {
                         navController.popBackStack() // Volta para a tela anterior
                     }
                 )
+            }
+            composable("edicao/{id}") { navBackStackEntry ->
+                val id = navBackStackEntry.arguments?.getString("id")
+                val movimentacao = viewModel.movimentacoes.find { it.id == id }
+
+                if (movimentacao != null) {
+                    TelaEdicao(
+                        movimentacaoAtual = movimentacao,
+                        onSalvar = { editada ->
+                            viewModel.editarMovimentacao(id!!, editada)
+                            navController.popBackStack()
+                        },
+                        onExcluir = {
+                            viewModel.excluirMovimentacao(id!!)
+                            navController.popBackStack()
+                        }
+                    )
+                }
             }
         }
     }

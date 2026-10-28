@@ -29,4 +29,15 @@ class MeuBolsoViewModel : ViewModel() {
         _movimentacoes.add(movimentacao)
     }
 
+    fun editarMovimentacao(id: String, novaMovimentacao: Movimentacao) {
+        val index = movimentacoes.indexOfFirst { it.id == id }
+        if (index != -1) {
+            _movimentacoes[index] = novaMovimentacao // A substituição atualiza a UI automaticamente
+        }
+    }
+
+    fun excluirMovimentacao(id: String) {
+        _movimentacoes.removeAll { it.id == id }
+    }
+
 }
