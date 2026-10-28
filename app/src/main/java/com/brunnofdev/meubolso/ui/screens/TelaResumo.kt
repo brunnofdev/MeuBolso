@@ -99,7 +99,7 @@ fun TelaResumo(
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(ultimasMovimentacoes) { mov ->
+            items(ultimasMovimentacoes.takeLast(5).reversed()) { mov ->
                 ItemMovimentacao(mov)
             }
         }
