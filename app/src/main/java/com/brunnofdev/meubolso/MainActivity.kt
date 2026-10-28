@@ -1,41 +1,92 @@
 package com.brunnofdev.meubolso
 
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.activity.viewModels
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import com.brunnofdev.meubolso.ui.screens.TelaResumo
-import com.brunnofdev.meubolso.ui.theme.MeuBolsoTheme
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.brunnofdev.meubolso.model.Movimentacao
+import com.brunnofdev.meubolso.ui.screens.*
 import com.brunnofdev.meubolso.viewmodel.MeuBolsoViewModel
-import kotlin.collections.emptyList
 
 class MainActivity : ComponentActivity() {
-
-    private val viewModel: MeuBolsoViewModel by viewModels()
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            MeuBolsoTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    val movimentacoes = viewModel.movimentacoes
+            MeuBolsoApp()
+        }
+    }
+}
 
-                    TelaResumo(
-                        saldo = viewModel.calcularSaldo(),
-                        receitas = viewModel.calcularReceitas(),
-                        despesas = viewModel.calcularDespesas(),
-                        ultimasMovimentacoes = movimentacoes
+@Composable
+fun MeuBolsoApp(viewModel: MeuBolsoViewModel = viewModel()) {
+    val navController = rememberNavController()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    Scaffold(
+        bottomBar = {
+
+                if (currentRoute != "cadastro") {
+                NavigationBar {
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.Home, contentDescription = "Resumo") },
+                        label = { Text("Resumo") },
+                        selected = currentRoute == "resumo",
+                        onClick = { navController.navigate("resumo") }
+                    )
+                    NavigationBarItem(
+                        icon = { Icon(Icons.Default.List, contentDescription = "Histórico") },
+                        label = { Text("Histórico") },
+                        selected = currentRoute == "historico",
+                        onClick = { navController.navigate("historico") }
                     )
                 }
+                }
+            },
+
+        floatingActionButton = {
+            if (currentRoute == "resumo" || currentRoute == "historico") {
+                FloatingActionButton(onClick = { navController.navigate("cadastro") }) {
+                    Icon(Icons.Default.Add, contentDescription = "Nova Movimentação")
+                }
+            }
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = "resumo",
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable("resumo") {
+                TelaResumo(saldo = viewModel.calcularSaldo(),
+                    despesas = viewModel.calcularDespesas(),
+                    receitas = viewModel.calcularReceitas(),
+                    ultimasMovimentacoes = viewModel.movimentacoes)
+            }
+            composable("historico") {
+                TelaHistorico(movimentacoes = viewModel.movimentacoes)
+
+        }
+            composable("cadastro") {
+                TelaCadastro(
+                    onSalvar = { novaMovimentacao ->
+                        viewModel.adicionarMovimentacao(novaMovimentacao)
+                        navController.popBackStack() // Volta para a tela anterior
+                    }
+                )
             }
         }
     }
