@@ -13,6 +13,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -49,8 +50,7 @@ fun MeuBolsoApp(viewModel: MeuBolsoViewModel) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
-    // Coleta a lista reativa do banco de dados Room como estado do Compose
-    val listaMovimentacoes by viewModel.movimentacoes.collectAsState()
+    val listaMovimentacoes by viewModel.movimentacoes.collectAsStateWithLifecycle()
 
     Scaffold(
         bottomBar = {
