@@ -1,11 +1,15 @@
 package com.brunnofdev.meubolso.model
 
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
 enum class TipoMovimentacao {
     RECEITA, DESPESA
 }
 
+@Entity(tableName = "movimentacoes")
 data class Movimentacao(
-    val id: String = java.util.UUID.randomUUID().toString(),
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
     val descricao: String,
     val valor: Double,
     val tipo: TipoMovimentacao,
