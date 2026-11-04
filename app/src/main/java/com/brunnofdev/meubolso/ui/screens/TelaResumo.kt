@@ -4,6 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -21,7 +24,9 @@ fun TelaResumo(
     saldo: Double,
     receitas: Double,
     despesas: Double,
-    ultimasMovimentacoes: List<Movimentacao>
+    ultimasMovimentacoes: List<Movimentacao>,
+    ocultarValores: Boolean,
+    onToggleOcultarValores: (Boolean) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -29,12 +34,26 @@ fun TelaResumo(
             .padding(16.dp)
             .background(BackgroundBlue)
     ) {
-        Text(
-            text = "Resumo Financeiro",
-            fontSize = 24.sp,
-            fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 16.dp)
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Resumo Financeiro",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold
+            )
+
+            IconButton(onClick = { onToggleOcultarValores(!ocultarValores) }) {
+                Icon(
+                    imageVector = if (ocultarValores) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                    contentDescription = if (ocultarValores) "Exibir Valores" else "Ocultar Valores"
+                )
+            }
+        }
 
         Card(
             modifier = Modifier.fillMaxWidth(),
@@ -46,7 +65,7 @@ fun TelaResumo(
             ) {
                 Text(text = "Saldo Atual", fontSize = 16.sp)
                 Text(
-                    text = "R$ ${"%.2f".format(saldo)}",
+                    text = if (ocultarValores) "R$ ••••" else "R$ ${"%.2f".format(saldo)}",
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -66,7 +85,7 @@ fun TelaResumo(
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(text = "Receitas", fontSize = 14.sp)
                     Text(
-                        text = "R$ ${"%.2f".format(receitas)}",
+                        text = if (ocultarValores) "R$ ••••" else "R$ ${"%.2f".format(receitas)}",
                         color = Color(0xFF155724),
                         fontWeight = FontWeight.Bold
                     )
@@ -82,7 +101,7 @@ fun TelaResumo(
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text(text = "Despesas", fontSize = 14.sp)
                     Text(
-                        text = "R$ ${"%.2f".format(despesas)}",
+                        text = if (ocultarValores) "R$ ••••" else "R$ ${"%.2f".format(despesas)}",
                         color = Color(0xFF721C24),
                         fontWeight = FontWeight.Bold
                     )
@@ -103,14 +122,14 @@ fun TelaResumo(
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(ultimasMovimentacoes.take(5)) { mov ->
-                ItemMovimentacao(mov)
+                ItemMovimentacao(mov, ocultarValores)
             }
         }
     }
 }
 
 @Composable
-fun ItemMovimentacao(movimentacao: Movimentacao) {
+fun ItemMovimentacao(movimentacao: Movimentacao, ocultarValores: Boolean) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondary)
@@ -131,7 +150,7 @@ fun ItemMovimentacao(movimentacao: Movimentacao) {
                 )
             }
             Text(
-                text = "R$ ${"%.2f".format(movimentacao.valor)}",
+                text = if (ocultarValores) "R$ ••••" else "R$ ${"%.2f".format(movimentacao.valor)}",
                 color = if (movimentacao.tipo == TipoMovimentacao.RECEITA) Color(0xFF2E7D32) else Color(0xFFD32F2F),
                 fontWeight = FontWeight.Bold
             )

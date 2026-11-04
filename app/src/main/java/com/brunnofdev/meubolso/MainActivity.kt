@@ -22,6 +22,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.brunnofdev.meubolso.database.AppDatabase
+import com.brunnofdev.meubolso.preferences.PreferenciasDataStore
 import com.brunnofdev.meubolso.ui.screens.*
 import com.brunnofdev.meubolso.viewmodel.MeuBolsoViewModel
 import com.brunnofdev.meubolso.viewmodel.MeuBolsoViewModelFactory
@@ -32,11 +33,25 @@ class MainActivity : ComponentActivity() {
         setContent {
             com.brunnofdev.meubolso.ui.theme.MeuBolsoTheme {
                 val context = LocalContext.current
-                val database = AppDatabase.getDatabase(context)
-                val dao = database.movimentacaoDao()
 
+                val database = remember(context) {
+                    AppDatabase.getDatabase(context)
+                }
+
+                val dao = remember(database) {
+                    database.movimentacaoDao()
+                }
+                val preferenciasDataStore = remember(context) {
+                    PreferenciasDataStore(context.applicationContext)
+                }
+                val factory = remember(dao, preferenciasDataStore) {
+                    MeuBolsoViewModelFactory(
+                        dao,
+                        preferenciasDataStore
+                    )
+                }
                 val viewModel: MeuBolsoViewModel = viewModel(
-                    factory = MeuBolsoViewModelFactory(dao)
+                    factory = factory
                 )
                 MeuBolsoApp(viewModel = viewModel)
             }
@@ -51,6 +66,7 @@ fun MeuBolsoApp(viewModel: MeuBolsoViewModel) {
     val currentRoute = navBackStackEntry?.destination?.route
 
     val listaMovimentacoes by viewModel.movimentacoes.collectAsStateWithLifecycle()
+    val ocultarValores by viewModel.ocultarValores.collectAsStateWithLifecycle()
 
     Scaffold(
         bottomBar = {
@@ -95,7 +111,11 @@ fun MeuBolsoApp(viewModel: MeuBolsoViewModel) {
                     saldo = viewModel.calcularSaldo(),
                     despesas = viewModel.calcularDespesas(),
                     receitas = viewModel.calcularReceitas(),
-                    ultimasMovimentacoes = listaMovimentacoes
+                    ultimasMovimentacoes = listaMovimentacoes,
+                    ocultarValores = ocultarValores,
+                    onToggleOcultarValores = { novoEstado ->
+                        viewModel.definirOcultacao(novoEstado)
+                    }
                 )
             }
 
