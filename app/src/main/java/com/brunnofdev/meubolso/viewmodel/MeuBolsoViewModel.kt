@@ -1,22 +1,33 @@
 package com.brunnofdev.meubolso.viewmodel
 
-import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import com.brunnofdev.meubolso.model.Movimentacao
+import com.brunnofdev.meubolso.model.MovimentacaoDao
 import com.brunnofdev.meubolso.model.TipoMovimentacao
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
-class MeuBolsoViewModel : ViewModel() {
+class MeuBolsoViewModel(private val dao: MovimentacaoDao) : ViewModel() {
 
-    private val _movimentacoes = mutableStateListOf<Movimentacao>() //privada e mutável
-    val movimentacoes: List<Movimentacao> = _movimentacoes //pública
+    val movimentacoes: StateFlow<List<Movimentacao>> = dao.obterTodas()
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     fun calcularReceitas(): Double {
-        return _movimentacoes
+        return movimentacoes.value
             .filter { it.tipo == TipoMovimentacao.RECEITA }
             .sumOf { it.valor }
     }
+
     fun calcularDespesas(): Double {
-        return _movimentacoes
+        return movimentacoes.value
             .filter { it.tipo == TipoMovimentacao.DESPESA }
             .sumOf { it.valor }
     }
@@ -25,19 +36,26 @@ class MeuBolsoViewModel : ViewModel() {
         return calcularReceitas() - calcularDespesas()
     }
 
+
     fun adicionarMovimentacao(movimentacao: Movimentacao) {
-        _movimentacoes.add(movimentacao)
+        viewModelScope.launch { dao.inserir(movimentacao) }
     }
 
-    fun editarMovimentacao(id: String, novaMovimentacao: Movimentacao) {
-        val index = movimentacoes.indexOfFirst { it.id == id }
-        if (index != -1) {
-            _movimentacoes[index] = novaMovimentacao
+    fun atualizar(movimentacao: Movimentacao) {
+        viewModelScope.launch { dao.atualizar(movimentacao) }
+    }
+
+    fun excluir(movimentacao: Movimentacao) {
+        viewModelScope.launch { dao.excluir(movimentacao) }
+    }
+}
+
+class MeuBolsoViewModelFactory(private val dao: MovimentacaoDao) : ViewModelProvider.Factory {
+    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+        if (modelClass.isAssignableFrom(MeuBolsoViewModel::class.java)) {
+            @Suppress("UNCHECKED_CAST")
+            return MeuBolsoViewModel(dao) as T
         }
+        throw IllegalArgumentException("Classe ViewModel desconhecida")
     }
-
-    fun excluirMovimentacao(id: String) {
-        _movimentacoes.removeAll { it.id == id }
-    }
-
 }

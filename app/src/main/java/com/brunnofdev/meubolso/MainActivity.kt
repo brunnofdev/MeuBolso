@@ -3,7 +3,6 @@ package com.brunnofdev.meubolso
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
@@ -13,40 +12,50 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.brunnofdev.meubolso.database.AppDatabase
 import com.brunnofdev.meubolso.ui.screens.*
 import com.brunnofdev.meubolso.viewmodel.MeuBolsoViewModel
-import com.brunnofdev.meubolso.ui.theme.BackgroundBlue
-import com.brunnofdev.meubolso.ui.theme.PrimaryBlue
-import com.brunnofdev.meubolso.ui.theme.IncomeGreen
-import com.brunnofdev.meubolso.ui.theme.ExpenseRed
-import java.nio.file.WatchEvent
+import com.brunnofdev.meubolso.viewmodel.MeuBolsoViewModelFactory
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            com.brunnofdev.meubolso.ui.theme.MeuBolsoTheme{
-            MeuBolsoApp()
-        }}
+            com.brunnofdev.meubolso.ui.theme.MeuBolsoTheme {
+                val context = LocalContext.current
+                val database = AppDatabase.getDatabase(context)
+                val dao = database.movimentacaoDao()
+
+                val viewModel: MeuBolsoViewModel = viewModel(
+                    factory = MeuBolsoViewModelFactory(dao)
+                )
+                MeuBolsoApp(viewModel = viewModel)
+            }
+        }
     }
 }
 
 @Composable
-fun MeuBolsoApp(viewModel: MeuBolsoViewModel = viewModel()) {
+fun MeuBolsoApp(viewModel: MeuBolsoViewModel) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    // Coleta a lista reativa do banco de dados Room como estado do Compose
+    val listaMovimentacoes by viewModel.movimentacoes.collectAsState()
+
     Scaffold(
         bottomBar = {
-
-                if (currentRoute != "cadastro") {
-                NavigationBar (containerColor = MaterialTheme.colorScheme.primaryContainer) {
+            if (currentRoute != "cadastro") {
+                NavigationBar(containerColor = MaterialTheme.colorScheme.primaryContainer) {
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.Home, contentDescription = "Resumo") },
                         label = { Text("Resumo") },
@@ -66,12 +75,11 @@ fun MeuBolsoApp(viewModel: MeuBolsoViewModel = viewModel()) {
                         onClick = { navController.navigate("relatorio") }
                     )
                 }
-                }
-            },
-
+            }
+        },
         floatingActionButton = {
             if (currentRoute == "resumo" || currentRoute == "historico") {
-                FloatingActionButton( { navController.navigate("cadastro") }) {
+                FloatingActionButton(onClick = { navController.navigate("cadastro") }) {
                     Icon(Icons.Default.Add, contentDescription = "Nova Movimentação")
                 }
             }
@@ -83,22 +91,27 @@ fun MeuBolsoApp(viewModel: MeuBolsoViewModel = viewModel()) {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable("resumo") {
-                TelaResumo(saldo = viewModel.calcularSaldo(),
+                TelaResumo(
+                    saldo = viewModel.calcularSaldo(),
                     despesas = viewModel.calcularDespesas(),
                     receitas = viewModel.calcularReceitas(),
-                    ultimasMovimentacoes = viewModel.movimentacoes)
+                    ultimasMovimentacoes = listaMovimentacoes
+                )
             }
 
             composable("relatorio") {
                 TelaRelatorio(
-                    movimentacoes = viewModel.movimentacoes
+                    movimentacoes = listaMovimentacoes
                 )
             }
 
             composable("historico") {
-                TelaHistorico(movimentacoes = viewModel.movimentacoes, navController = navController)
+                TelaHistorico(
+                    movimentacoes = listaMovimentacoes,
+                    navController = navController
+                )
+            }
 
-        }
             composable("cadastro") {
                 TelaCadastro(
                     onSalvar = { novaMovimentacao ->
@@ -107,19 +120,23 @@ fun MeuBolsoApp(viewModel: MeuBolsoViewModel = viewModel()) {
                     }
                 )
             }
-            composable("edicao/{id}") { navBackStackEntry ->
-                val id = navBackStackEntry.arguments?.getString("id")
-                val movimentacao = viewModel.movimentacoes.find { it.id == id }
+
+            composable(
+                route = "edicao/{id}",
+                arguments = listOf(navArgument("id") { type = NavType.IntType })
+            ) { backStackEntry ->
+                val id = backStackEntry.arguments?.getInt("id") ?: 0
+                val movimentacao = listaMovimentacoes.find { it.id == id }
 
                 if (movimentacao != null) {
                     TelaEdicao(
                         movimentacaoAtual = movimentacao,
                         onSalvar = { editada ->
-                            viewModel.editarMovimentacao(id!!, editada)
+                            viewModel.atualizar(editada)
                             navController.popBackStack()
                         },
                         onExcluir = {
-                            viewModel.excluirMovimentacao(id!!)
+                            viewModel.excluir(movimentacao)
                             navController.popBackStack()
                         }
                     )
